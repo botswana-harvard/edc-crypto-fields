@@ -3,8 +3,8 @@ from M2Crypto.RSA import RSAError
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
 
-from ..classes import Cryptor, FieldCryptor
-from ..exceptions import AlgorithmError, EncryptionKeyError, ModeError
+from edc_crypto_fields.classes import Cryptor, FieldCryptor
+from edc_crypto_fields.exceptions import AlgorithmError, EncryptionKeyError, ModeError
 
 
 class TestCryptorMethods(TestCase):

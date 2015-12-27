@@ -9,6 +9,7 @@ class IrreversibleRsaEncryptionField(BaseEncryptedField):
 
         self.algorithm = 'rsa'
         self.mode = 'irreversible'
-        defaults = {'help_text': kwargs.get('help_text', '') + ' (Encryption: {0} {1})'.format(self.algorithm, self.mode,)}
+        defaults = {'help_text':
+                    kwargs.get('help_text', '') + ' (Encryption: {0} {1})'.format(self.algorithm, self.mode,)}
         kwargs.update(defaults)
         super(IrreversibleRsaEncryptionField, self).__init__(*args, **kwargs)

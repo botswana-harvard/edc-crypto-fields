@@ -2,6 +2,7 @@ from django.db import models
 
 from edc_base.model.models import BaseUuidModel
 from edc_sync.models import SyncModelMixin
+from edc_crypto_fields.managers.crypto_manager import CryptoManager
 
 # try:
 #     from edc.device.dispatch.models import BaseDispatchSyncUuidModel
@@ -44,7 +45,7 @@ class Crypt(SyncModelMixin, BaseUuidModel):
         max_length=50,
         null=True)
 
-    objects = models.Manager()
+    objects = CryptoManager()
 
     def deserialize_on_duplicate(self):
         return False
@@ -53,7 +54,7 @@ class Crypt(SyncModelMixin, BaseUuidModel):
         return (self.hash, self.algorithm, self.mode,)
 
     class Meta:
-        app_label = 'crypto_fields'
-        db_table = 'bhp_crypto_crypt'
+        app_label = 'edc_crypto_fields'
+        db_table = 'crypto_crypt'
         verbose_name = 'Crypt'
         unique_together = (('hash', 'algorithm', 'mode'),)

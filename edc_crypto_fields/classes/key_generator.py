@@ -1,7 +1,9 @@
-import os
 import base64
-from M2Crypto import Rand, RSA
+import os
+
 from django.conf import settings
+from M2Crypto import Rand, RSA
+
 from .cryptor import Cryptor
 
 

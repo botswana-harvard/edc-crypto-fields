@@ -29,7 +29,6 @@ class FieldCryptor(object):
                 raise TypeError('Expected basestring. Convert your non-null value to basetring '
                                 'before calling encrypt.')
             if not self.is_encrypted(value):
-                #value = self.to_string(value)
                 if self.algorithm == 'aes':
                     encoded_secret = self.cryptor.IV_PREFIX.join(self.cryptor.aes_encrypt(value))
                 elif self.algorithm == 'rsa':
@@ -88,7 +87,7 @@ class FieldCryptor(object):
         hashed_value = None
         if hash_secret:
             # get and update or create the crypt model with this hash, cipher pair
-            Crypt = get_model('crypto_fields', 'crypt')
+            Crypt = get_model('edc_crypto_fields', 'crypt')
             hashed_value = self.get_hash(hash_secret)
             secret = self._get_secret_from_hash_secret(hash_secret, hashed_value)
             found = last_secret.get(hashed_value) is not None
@@ -163,7 +162,7 @@ class FieldCryptor(object):
         If not found, returns None"""
         secret = last_secret.get(hashed_value)
         if not secret:
-            Crypt = get_model('crypto_fields', 'crypt')
+            Crypt = get_model('edc_crypto_fields', 'crypt')
             try:
                 # TODO: this ignores "using" which is a serious problem
                 # for working with multiple databases

@@ -38,25 +38,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'tastypie',
     'edc_base',
-    'edc_quota',
-    'edc_consent',
-    'edc_appointment',
-    'edc_visit_schedule',
-    'edc.data_manager',
-    'edc.subject.registration',
-    'edc.subject.subject_config',
-    'edc.apps.app_configuration',
-    'edc.lab.lab_clinic_api',
-    'edc.subject.entry',
-    'edc.testing',
-    'edc.core.bhp_variables',
-    'edc.core.crypto_fields',
-    'edc.core.bhp_content_type_map',
-    'edc.entry_meta_data',
-    'edc.subject.entry',
-    'edc_appointment',
+    'edc_crypto_fields',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -70,7 +53,7 @@ MIDDLEWARE_CLASSES = (
     # 'django.middleware.security.SecurityMiddleware',
 )
 
-ROOT_URLCONF = 'edc_appointment.urls'
+ROOT_URLCONF = 'edc_crypto_fields.urls'
 
 TEMPLATES = [
     {
@@ -88,7 +71,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'edc_appointment.wsgi.application'
+WSGI_APPLICATION = 'edc_crypto_fields.wsgi.application'
 
 
 # Database
@@ -123,16 +106,4 @@ STATIC_URL = '/static/'
 
 GIT_DIR = BASE_DIR.ancestor(1)
 
-SITE_CODE = '10'
-SUBJECT_TYPES = ['test_subject_type']
-DEVICE_ID = '10'
-SERVER_DEVICE_ID_LIST = [99]
-MIDDLEMAN_DEVICE_ID_LIST = []
-PROJECT_ROOT = BASE_DIR.ancestor(1)
-FIELD_MAX_LENGTH = 'default'
-IS_SECURE_DEVICE = True
 KEY_PATH = os.path.join(BASE_DIR.ancestor(1), 'crypto_fields')
-KEY_PREFIX = 'user'
-ALLOW_MODEL_SERIALIZATION = False
-MAX_SUBJECTS = 0
-DISPATCH_APP_LABELS = []

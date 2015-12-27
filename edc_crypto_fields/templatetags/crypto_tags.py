@@ -1,4 +1,5 @@
 from django import template
+
 from ..utils import mask_encrypted
 
 register = template.Library()

@@ -22,4 +22,3 @@ After settings has been updates, keys can be generated using a management comman
     python manage.py generate_keys
     
 The keys will be generated and placed in the folder specified in `KEY_PATH`. This is where the project will look for keys whenever it needs to encrypt a field.
-    
