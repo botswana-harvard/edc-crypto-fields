@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/botswana-harvard/edc-crypto-fields.svg?branch=develop)](https://travis-ci.org/botswana-harvard/edc-crypto-fields) [![Coverage Status](https://coveralls.io/repos/botswana-harvard/edc-crypto-fields/badge.svg?branch=develop&service=github)](https://coveralls.io/github/botswana-harvard/edc-crypto-fields?branch=develop)
+
 # edc-crypto-fields
 Encrypt model fields -- like django-crypto-fields but uses M2Crypto
 
