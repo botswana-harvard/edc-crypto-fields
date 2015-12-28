@@ -11,6 +11,7 @@ class TestCryptorMethods(TestCase):
 
     """"""
     def test_base_cryptor_load_keys(self):
+        """ """
         # assert raises error when init with bogus algorithm
         self.assertRaises(AlgorithmError, Cryptor, 'nsa')
         self.assertRaises(ModeError, Cryptor, 'aes', 'irreversible')
@@ -49,7 +50,7 @@ class TestCryptorMethods(TestCase):
         # assert aes loads aes key
         self.assertTrue(cryptor.set_aes_key())
         value = 'ABCDEF12345'
-        #assert that an instance init with aes cannot call rsa_encrypt
+        # assert that an instance init with aes cannot call rsa_encrypt
         self.assertRaises(ImproperlyConfigured, cryptor.rsa_encrypt, value)
         cryptor = Cryptor('rsa', 'local')
         encrypted_value = cryptor.rsa_encrypt(value)

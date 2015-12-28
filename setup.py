@@ -16,7 +16,7 @@ setup(
     author_email='ew2789@gmail.com',
     packages=find_packages(),
     include_package_data=True,
-    url='http://github/botswana-harvard/edc-crypto-fields',
+    url='http://github.com/botswana-harvard/edc-crypto-fields',
     license='GPL licence, see LICENCE',
     description='Edc django field level encryption.',
     long_description=README,

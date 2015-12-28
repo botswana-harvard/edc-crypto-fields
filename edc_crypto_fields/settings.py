@@ -39,6 +39,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'edc_base',
+    'edc_device',
+    'edc_sync',
     'edc_crypto_fields',
 )
 
@@ -107,3 +109,8 @@ STATIC_URL = '/static/'
 GIT_DIR = BASE_DIR.ancestor(1)
 
 KEY_PATH = os.path.join(BASE_DIR.ancestor(1), 'crypto_fields')
+DEVICE_ID = '99'
+SERVER_DEVICE_ID_LIST = ['99']
+MIDDLEMAN_DEVICE_ID_LIST = ['98']
+FIELD_MAX_LENGTH = 'default'
+IS_SECURE_DEVICE = True

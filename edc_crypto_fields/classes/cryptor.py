@@ -75,9 +75,11 @@ class Cryptor(BaseCryptor):
                                                                 keys=', '.join(self._get_keypaths().keys())))
         if self.mode:
             if (self.mode not in self._get_keypaths().get(self.algorithm).iterkeys()):
-                raise ModeError('Invalid mode \'{mode}\' for algorithm {algorithm}.'
-                                ' Must be one of {keys}'.format(mode=self.mode, algorithm=self.algorithm,
-                                                                keys=', '.join(self._get_keypaths().get(self.algorithm).keys())))
+                raise ModeError(
+                    'Invalid mode \'{mode}\' for algorithm {algorithm}.'
+                    ' Must be one of {keys}'.format(
+                        mode=self.mode, algorithm=self.algorithm,
+                        keys=', '.join(self._get_keypaths().get(self.algorithm).keys())))
         if kwargs.get('preload', True):
             if not self.IS_PRELOADED:
                 self.preload_all_keys()
@@ -160,7 +162,8 @@ class Cryptor(BaseCryptor):
          - algorithm -- must be 'aes' (default: no default).
          - mode -- the mode dictionary key. For example local (default: no default).
 
-        .. Note:: have not implemented default values for keyword args as a precaution for an incorrectly configured instance.
+        .. Note:: have not implemented default values for keyword args as
+            a precaution for an incorrectly configured instance.
 
         """
         algorithm = kwargs.get('algorithm', self.algorithm)
@@ -168,7 +171,8 @@ class Cryptor(BaseCryptor):
         if algorithm != 'aes':
             raise AlgorithmError('Invalid algorithm. Expected \'aes\', Got {0}'.format(algorithm))
         self.has_encryption_key = False
-        if self._get_preloaded_keypaths().get(algorithm).get(mode).get('key') and self.KEY_PATH not in self._get_preloaded_keypaths().get(algorithm).get(mode).get('key'):
+        if (self._get_preloaded_keypaths().get(algorithm).get(mode).get('key') and
+                self.KEY_PATH not in self._get_preloaded_keypaths().get(algorithm).get(mode).get('key')):
             self.aes_key = self._get_preloaded_keypaths().get(algorithm).get(mode).get('key')
         else:
             try:
@@ -290,29 +294,9 @@ class Cryptor(BaseCryptor):
         def load_key(algorithm, mode=None, key_name=None):
             """ Helper method to load one key for load_all_keys. """
             if algorithm == 'rsa':
-                if key_name == 'public':
-                    self.set_public_key(algorithm=algorithm, mode=mode)
-                    key = self.public_key
-                    self.public_key = None
-                elif key_name == 'private':
-                    self.set_private_key(algorithm=algorithm, mode=mode)
-                    key = self.private_key
-                    self.private_key = None
-                elif key_name == 'salt':
-                    key = self.get_encrypted_salt(algorithm, mode)
-                else:
-                    raise EncryptionKeyError('Unexpected key type for {algorithm} {mode}.'
-                                             'Got {key_name}'.format(algorithm=algorithm, mode=mode, key_name=key_name))
+                key = self.preload_rsa_keys(key_name, algorithm, mode)
             elif algorithm == 'aes':
-                if key_name == 'key':
-                    self.set_aes_key(algorithm=algorithm, mode=mode)
-                    key = self.aes_key
-                    self.aes_key = None
-                elif key_name == 'salt':
-                    key = self.get_encrypted_salt(algorithm, mode)
-                else:
-                    raise EncryptionKeyError('Unexpected key type for {algorithm} {mode}.'
-                                             'Got {key_name}'.format(algorithm=algorithm, mode=mode, key_name=key_name))
+                key = self.preload_aes_keys(key_name, algorithm, mode)
             else:
                 raise AlgorithmError('Unknown algorithm. Got {0}.'.format(algorithm))
             return key
@@ -331,6 +315,36 @@ class Cryptor(BaseCryptor):
             else:
                 logger.info('No keys found to load. */')
             return True
+
+    def preload_rsa_keys(self, key_name, algorithm, mode):
+        if key_name == 'public':
+            self.set_public_key(algorithm=algorithm, mode=mode)
+            key = self.public_key
+            self.public_key = None
+        elif key_name == 'private':
+            self.set_private_key(algorithm=algorithm, mode=mode)
+            key = self.private_key
+            self.private_key = None
+        elif key_name == 'salt':
+            key = self.get_encrypted_salt(algorithm, mode)
+        else:
+            raise EncryptionKeyError(
+                'Unexpected key type for {algorithm} {mode}.'
+                'Got {key_name}'.format(algorithm=algorithm, mode=mode, key_name=key_name))
+        return key
+
+    def preload_aes_keys(self, key_name, algorithm, mode):
+        if key_name == 'key':
+            self.set_aes_key(algorithm=algorithm, mode=mode)
+            key = self.aes_key
+            self.aes_key = None
+        elif key_name == 'salt':
+            key = self.get_encrypted_salt(algorithm, mode)
+        else:
+            raise EncryptionKeyError(
+                'Unexpected key type for {algorithm} {mode}.'
+                'Got {key_name}'.format(algorithm=algorithm, mode=mode, key_name=key_name))
+        return key
 
     def _encrypt_salt(self, plain_salt):
         """Encrypts a given salt using the 'salter' rsa key pair """
@@ -375,67 +389,63 @@ class Cryptor(BaseCryptor):
         for algorithm, mode_dict in self._get_keypaths().iteritems():
             for mode, key_dict in mode_dict.iteritems():
                 for key_name in key_dict.iterkeys():
-                    if not isinstance(self._get_preloaded_keypaths()[algorithm][mode][key_name], (RSA.RSA_pub, RSA.RSA, basestring)):
+                    if not isinstance(
+                            self._get_preloaded_keypaths()[algorithm][mode][key_name],
+                            (RSA.RSA_pub, RSA.RSA, basestring)):
                         preloaded = False
                         if msg:
                             logger.warning(msg.format(algorithm=algorithm, mode=mode, key_name=key_name))
                         else:
                             break
-#                     elif isinstance(self._get_preloaded_keypaths()[algorithm][mode][key_name], basestring):
-#                         if self.KEY_PATH in self._get_preloaded_keypaths()[algorithm][mode][key_name]:
-#                             preloaded = False
-#                             if msg:
-#                                 logger.warning(msg.format(algorithm=algorithm, mode=mode, key_name=key_name))
-#                             else:
-#                                 break
                     else:
                         pass
         return preloaded
 
     def test(self):
-
-        def _encrypt(self, plaintext, algorithm, mode):
-            try:
-                if algorithm == 'rsa':
-                    encrypted_text = self.rsa_encrypt(plaintext, algorithm=algorithm, mode=mode)
-                elif algorithm == 'aes':
-                    encrypted_text = self.aes_encrypt(plaintext, algorithm=algorithm, mode=mode)
-                else:
-                    raise TypeError('Encryption error for {0}'.format(algorithm))
-            except TypeError as e:
-                logger.error('Encrypt error for {0} {1}. Got \'{2}\''.format(algorithm, mode, e))
-                encrypted_text = None
-                pass
-            return encrypted_text
-
-        def _decrypt(self, encrypted_text, algorithm, mode):
-            try:
-                if algorithm == 'rsa':
-                    plaintext = self.rsa_decrypt(encrypted_text, False, algorithm=algorithm, mode=mode)
-                elif algorithm == 'aes':
-                    plaintext = self.aes_decrypt(encrypted_text, algorithm=algorithm, mode=mode)
-                else:
-                    raise TypeError('Encryption error for {0}'.format(algorithm))
-            except TypeError as e:
-                logger.error('Decrypt error for {0} {1}. Got \'{2}\''.format(algorithm, mode, e))
-                plaintext = None
-                pass
-            return plaintext
-
         plaintext = '123456789ABCDEFG'
         logger.info('Testing keys...')
         for algorithm, mode_dict in self._get_keypaths().iteritems():
             for mode in mode_dict.iterkeys():
                 # logger.warning('Testing {algorithm} {mode}...'.format(algorithm=algorithm, mode=mode))
-                encrypted_text = _encrypt(self, plaintext, algorithm, mode)
-                decrypted_text = _decrypt(self, encrypted_text, algorithm, mode)
+                encrypted_text = self.test_encrypt(plaintext, algorithm, mode)
+                decrypted_text = self.test_decrypt(encrypted_text, algorithm, mode)
                 if encrypted_text == decrypted_text and decrypted_text is not None:
                     decrypted_text = base64.b64encode(decrypted_text)
                 if decrypted_text != plaintext:
-                    logger.info('( ) Encrypt/Decrypt failed for {algorithm} {mode}.'.format(algorithm=algorithm, mode=mode))
+                    logger.info(
+                        '( ) Encrypt/Decrypt failed for {algorithm} {mode}.'.format(algorithm=algorithm, mode=mode))
                 else:
-                    logger.info('(*) Encrypt/Decrypt works for {algorithm} {mode}'.format(algorithm=algorithm, mode=mode))
+                    logger.info(
+                        '(*) Encrypt/Decrypt works for {algorithm} {mode}'.format(algorithm=algorithm, mode=mode))
         logger.info('Testing complete.')
+
+    def test_encrypt(self, plaintext, algorithm, mode):
+        try:
+            if algorithm == 'rsa':
+                encrypted_text = self.rsa_encrypt(plaintext, algorithm=algorithm, mode=mode)
+            elif algorithm == 'aes':
+                encrypted_text = self.aes_encrypt(plaintext, algorithm=algorithm, mode=mode)
+            else:
+                raise TypeError('Encryption error for {0}'.format(algorithm))
+        except TypeError as e:
+            logger.error('Encrypt error for {0} {1}. Got \'{2}\''.format(algorithm, mode, e))
+            encrypted_text = None
+            pass
+        return encrypted_text
+
+    def test_decrypt(self, encrypted_text, algorithm, mode):
+        try:
+            if algorithm == 'rsa':
+                plaintext = self.rsa_decrypt(encrypted_text, False, algorithm=algorithm, mode=mode)
+            elif algorithm == 'aes':
+                plaintext = self.aes_decrypt(encrypted_text, algorithm=algorithm, mode=mode)
+            else:
+                raise TypeError('Encryption error for {0}'.format(algorithm))
+        except TypeError as e:
+            logger.error('Decrypt error for {0} {1}. Got \'{2}\''.format(algorithm, mode, e))
+            plaintext = None
+            pass
+        return plaintext
 
     def _get_keypaths(self):
         return self.filter_keypaths_for_user(self._VALID_MODES)
@@ -444,7 +454,8 @@ class Cryptor(BaseCryptor):
         return self.filter_keypaths_for_user(self._PRELOADED_KEYS)
 
     def filter_keypaths_for_user(self, key_paths):
-        """Knocks out any paths for keys that the user is not permitted to access as indicated in the user profile."""
+        """Knocks out any paths for keys that the user is not permitted to
+        access as indicated in the user profile."""
         # ..todo:: TODO: probably use something like Marty Alchin's current user app
         # to get access to the current user and then their profile
         # is user profile secure? can the current user edit it?

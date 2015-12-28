@@ -53,10 +53,11 @@ class BaseEncryptedField(models.Field):
                                 'Got {0}'.format(settings.FIELD_MAX_LENGTH))
         except AttributeError as attribute_error:
             if 'FIELD_MAX_LENGTH' in str(attribute_error):
-                raise AttributeError('Settings attribute \'FIELD_MAX_LENGTH\' not found. '
-                                     'Set FIELD_MAX_LENGTH=\'migration\' before migrating an existing '
-                                     'DB to use Encrypted Fields. Migrate, encrypt, then set FIELD_MAX_LENGTH=\'default\','
-                                     'create a new schemamigration, and migrate again.')
+                raise AttributeError(
+                    'Settings attribute \'FIELD_MAX_LENGTH\' not found. '
+                    'Set FIELD_MAX_LENGTH=\'migration\' before migrating an existing '
+                    'DB to use Encrypted Fields. Migrate, encrypt, then set FIELD_MAX_LENGTH=\'default\','
+                    'create a new schemamigration, and migrate again.')
             else:
                 raise AttributeError(str(attribute_error))
         defaults = {'max_length': max_length}

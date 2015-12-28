@@ -88,8 +88,10 @@ class KeyGenerator(object):
                 else:
                     print '( ) Failed to create new {0} {1} key {2}'.format(algorithm, mode, filename)
 
-    def _create_new_salts(self, length=12,
-                        allowed_chars='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#%^&*()?<>.,[]{}'):
+    def _create_new_salts(
+            self, length=12,
+            allowed_chars=('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0'
+                           '123456789!@#%^&*()?<>.,[]{}')):
         """ Creates a new salt and encrypts it with the \'salter\' rsa public key.
 
         Algorithm and mode are needed to get the filename from VAILD_MODES.

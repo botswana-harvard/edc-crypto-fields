@@ -18,7 +18,8 @@ class ModelCryptor(object):
         """ Returns a list of field objects that use encryption.
 
         Keyword Arguments:
-        field_name -- return a list with field object of this attname only. Name is ignored if not a field using encrytion.
+        field_name -- return a list with field object of this attname only.
+            Name is ignored if not a field using encrytion.
         """
         from ..fields import BaseEncryptedField
         encrypted_fields = []
@@ -132,9 +133,13 @@ class ModelCryptor(object):
             encryption_prefix = encrypted_field.field_cryptor.cryptor.HASH_PREFIX
             field_exact = '{0}__exact'.format(encrypted_field.attname)
             if query_set == 'values_set':
-                unencrypted_set = (model.objects.exclude(**{field_startswith: encryption_prefix}).exclude(**{field_exact: None}).exclude(**{field_exact: ''}).values('pk'))
+                unencrypted_set = (model.objects.exclude(
+                    **{field_startswith: encryption_prefix}).exclude(
+                        **{field_exact: None}).exclude(**{field_exact: ''}).values('pk'))
             elif query_set == 'query_set':
-                unencrypted_set = (model.objects.exclude(**{field_startswith: encryption_prefix}).exclude(**{field_exact: None}).exclude(**{field_exact: ''}))
+                unencrypted_set = (model.objects.exclude(
+                    **{field_startswith: encryption_prefix}).exclude(
+                        **{field_exact: None}).exclude(**{field_exact: ''}))
             else:
                 raise TypeError('Invalid value for keyword argument \'query_set\'. Got {0}'.format(query_set))
             if unencrypted_set.count() > 0:
@@ -185,55 +190,28 @@ class ModelCryptor(object):
             field_name -- filter model or instance on the field object with this attname only
             suppress_messages -- whether to print messages to stdout (default: False)
         """
+        is_encrypted = None
         instance = kwargs.get('instance', None)
         model = kwargs.get('model', None)
         field_name = kwargs.get('field_name', None)
-        suppress_messages = kwargs.get('suppress_messages', False)
-        model_name = model._meta.object_name.lower()
         if instance and model:
             raise TypeError('One of keyword arguments \'model\' and \instance\' must be None')
-        if instance:
+        elif instance:
             model = instance.__class__
         else:
-            try:
-                instance = model.objects.all()[0]
-            except:
-                instance = None
+            instance = model.objects.first()
         if not instance:
             is_encrypted = True
-            if not suppress_messages:
-                print ('(*) {model_name}. (empty!)').format(model_name=model_name,
-                                                            field_name=field_name)
         else:
             encrypted_fields = self.get_encrypted_fields(model)
             if not encrypted_fields:
-                if not suppress_messages:
-                    print '{model_name} does not use field encryption.'.format(model_name=model_name)
                 is_encrypted = None
             else:
                 unencrypted_values_set, field_name = self.get_unencrypted_values_set(model, field_name=field_name)
                 if unencrypted_values_set.count() != 0:
                     is_encrypted = False
-                    if not suppress_messages:
-                        if unencrypted_values_set.count() == model.objects.all().count():
-                            if not suppress_messages:
-                                print ('( ) {model_name}').format(model_name=model_name,
-                                                                  field_name=field_name)
-                        else:
-                            print ('(?) {model_name}: {count} of {total} '
-                                   'rows not encrypted (based on {field_name})').format(
-                                model_name=model_name,
-                                count=unencrypted_values_set.count(),
-                                total=model.objects.all().count(),
-                                field_name=field_name)
                 elif model.objects.all().count() == 0:
                     is_encrypted = True
-                    if not suppress_messages:
-                        print ('(*) {model_name}. (empty!)').format(model_name=model_name,
-                                                                    field_name=field_name)
                 else:
                     is_encrypted = True
-                    if not suppress_messages:
-                        print ('(*) {model_name}').format(model_name=model_name,
-                                                          field_name=field_name)
         return is_encrypted
