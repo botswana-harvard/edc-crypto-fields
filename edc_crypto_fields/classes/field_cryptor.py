@@ -79,7 +79,7 @@ class FieldCryptor(object):
             if self.is_encrypted(secret, prefix(secret_is_hash)):
                 if secret_is_hash:
                     hashed_value = self.get_hash(secret)
-                    secret = self._get_secret_from_hash_secret(secret, hashed_value)
+                    secret = self.get_secret_from_hash_secret(secret, hashed_value)
                 else:
                     secret = secret[len(self.cryptor.SECRET_PREFIX):]  # secret is not a hash
                 if secret:
@@ -103,30 +103,34 @@ class FieldCryptor(object):
         """Wraps cryptor method of same name."""
         return self.cryptor.is_encrypted(value, prefix)
 
-    def update_secret_in_lookup(self, hash_secret):
+    def update_secret_in_lookup(self, hashsecret):
         """ Updates lookup with hashed_value and secret pairs given a hash+secret string."""
-        hashed_value = None
-        if hash_secret:
+        if hashsecret:
             # get and update or create the crypt model with this hash, cipher pair
-            hashed_value = self.get_hash(hash_secret)
-            secret = self._get_secret_from_hash_secret(hash_secret, hashed_value)
-            found = last_secret.get(hashed_value) is not None
-            if not found:
-                found = self.crypt_model.objects.using(self.using).filter(hash=hashed_value).exists()
-            if found:
-                if secret:
-                    self.crypt_model.objects.using(self.using).filter(hash=hashed_value).update(secret=secret)
+            hash_value = self.get_hash(hashsecret)
+            secret_value = self.get_secret_from_hash_secret(
+                hashsecret, hash_value)
+            cached_secret = last_secret.get(hash_value)
+            if not cached_secret:
+                stored = self.crypt_model.objects.using(self.using).filter(
+                    hash=hash_value).exists()
+            if (cached_secret or stored) and secret_value:
+                self.crypt_model.objects.using(self.using).filter(
+                    hash=hash_value).update(secret=secret_value)
             else:
-                if secret:
+                if secret_value:
                     self.crypt_model.objects.using(self.using).create(
-                        hash=hashed_value, secret=secret, algorithm=self.algorithm, mode=self.mode)
+                        hash=hash_value,
+                        secret=secret_value,
+                        algorithm=self.algorithm,
+                        mode=self.mode)
                 else:
                     # if the hash is not in the crypt model and you do not have a secret
                     # update: if performing a search, instead of data entry, the hash will not
                     # exist, so this print should eventually be removed
                     logger.warning(
                         'hash not found in crypt model. {0} {1} {2}'.format(
-                            self.algorithm, self.mode, hashed_value))
+                            self.algorithm, self.mode, hash_value))
 
     def get_hash(self, value):
         """ Returns the hashed value without hash_prefix by
@@ -159,7 +163,7 @@ class FieldCryptor(object):
         hashed_value = self.get_hash(encrypted_value)
         return self.cryptor.HASH_PREFIX + hashed_value
 
-    def _get_secret_from_hash_secret(self, value, hashed_value):
+    def get_secret_from_hash_secret(self, value, hashed_value):
         """ Returns the secret by splitting value on the hashed_value
         if value is hash+secret otherwise value is the prefix+hashed_value. """
         if not value:
@@ -171,11 +175,7 @@ class FieldCryptor(object):
                                len(hashed_value) +
                                len(self.cryptor.SECRET_PREFIX):]
                 if not secret:
-                    # lookup secret_string for this hashed_value
                     secret = self._lookup_secret(hashed_value)
-                    if not secret:
-                        raise ValueError(
-                            'Could not retrieve a secret for given hash. Got {0}'.format(hashed_value))
                 retval = secret
             else:
                 raise ValueError('Value must be encrypted or None.')
@@ -188,12 +188,12 @@ class FieldCryptor(object):
         secret = last_secret.get(hashed_value)
         if not secret:
             try:
-                # TODO: this ignores "using" which is a serious problem
-                # for working with multiple databases
                 crypt = self.crypt_model.objects.using(self.using).values('secret').get(hash=hashed_value)
                 secret = crypt.get('secret')
                 last_secret.set(hashed_value, secret)
-            except self.crypt_model.DoesNotExist:
+            except self.crypt_model.DoesNotExist as e:
+                raise ValueError(
+                    'Could not retrieve secret for \'{}\'. Got \'{}\'.'.format(hashed_value, str(e)))
                 pass
         return secret
 
