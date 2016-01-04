@@ -1,11 +1,13 @@
 import base64
 import logging
 
+from django.conf import settings
 from django.db.models import get_model
 
 from .cryptor import Cryptor
 from .hasher import Hasher
 from .last_secret import last_secret
+from edc_device import Device
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +22,15 @@ class FieldCryptor(object):
         self.mode = mode
         self.cryptor = Cryptor(algorithm=algorithm, mode=mode)
         self.hasher = Hasher(algorithm=algorithm, mode=mode)
+
+    @property
+    def crypt_model(self):
+        return get_model('edc_crypto_fields', 'crypt')
+
+    @property
+    def using(self):
+        device = Device()
+        return 'server' if device.is_server else settings.EDC_CRYPTO_FIELDS_USING
 
     def encrypt(self, value, **kwargs):
         """ Returns the encrypted field value (hash+secret) where
@@ -93,24 +104,18 @@ class FieldCryptor(object):
         hashed_value = None
         if hash_secret:
             # get and update or create the crypt model with this hash, cipher pair
-            Crypt = get_model('edc_crypto_fields', 'crypt')
             hashed_value = self.get_hash(hash_secret)
             secret = self._get_secret_from_hash_secret(hash_secret, hashed_value)
             found = last_secret.get(hashed_value) is not None
             if not found:
-                found = Crypt.objects.filter(hash=hashed_value).exists()
+                found = self.crypt_model.objects.using(self.using).filter(hash=hashed_value).exists()
             if found:
                 if secret:
-                    Crypt.objects.filter(hash=hashed_value).update(secret=secret)
-#                     crypt = Crypt.objects.get(hash=hashed_value)
-#                     crypt.secret = secret
-#                     crypt.save()
+                    self.crypt_model.objects.using(self.using).filter(hash=hashed_value).update(secret=secret)
             else:
                 if secret:
-                    Crypt.objects.create(hash=hashed_value,
-                                         secret=secret,
-                                         algorithm=self.algorithm,
-                                         mode=self.mode)
+                    self.crypt_model.objects.using(self.using).create(
+                        hash=hashed_value, secret=secret, algorithm=self.algorithm, mode=self.mode)
                 else:
                     # if the hash is not in the crypt model and you do not have a secret
                     # update: if performing a search, instead of data entry, the hash will not
@@ -178,14 +183,13 @@ class FieldCryptor(object):
         If not found, returns None"""
         secret = last_secret.get(hashed_value)
         if not secret:
-            Crypt = get_model('edc_crypto_fields', 'crypt')
             try:
                 # TODO: this ignores "using" which is a serious problem
                 # for working with multiple databases
-                crypt = Crypt.objects.values('secret').get(hash=hashed_value)
+                crypt = self.crypt_model.objects.using(self.using).values('secret').get(hash=hashed_value)
                 secret = crypt.get('secret')
                 last_secret.set(hashed_value, secret)
-            except Crypt.DoesNotExist:
+            except self.crypt_model.DoesNotExist:
                 pass
         return secret
 

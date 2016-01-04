@@ -1,8 +1,11 @@
 from datetime import datetime
 from optparse import make_option
+
 from django.core.management.base import BaseCommand, CommandError
-from ...classes import ModelCryptor, FieldCryptor
-from ...models import Crypt
+from django.conf import settings
+from django.db.models import get_model
+
+from edc_crypto_fields.classes import ModelCryptor, FieldCryptor
 
 
 class Command(BaseCommand):
@@ -183,17 +186,19 @@ class Command(BaseCommand):
         verified = 0
         failed_hash = 0
         failed_decrypt = 0
-        total = Crypt.objects.all().count()
-        for instance in Crypt.objects.all().order_by('-modified'):
+        Crypt = get_model(*settings.CRYPT_MODEL)
+        total = Crypt.objects.using('crypt').all().count()
+        for instance in Crypt.objects.using('crypt').all().order_by('-modified'):
             if print_messages:
                 self.stdout.write('\r\x1b[K {0} / {1} verifying...'.format(n, total))
             n += 1
             field_cryptor = FieldCryptor(instance.algorithm, instance.mode)
             try:
-                stored_secret = (field_cryptor.cryptor.HASH_PREFIX +
-                                                   instance.hash +
-                                                   field_cryptor.cryptor.SECRET_PREFIX +
-                                                   instance.secret)
+                stored_secret = (
+                    field_cryptor.cryptor.HASH_PREFIX +
+                    instance.hash +
+                    field_cryptor.cryptor.SECRET_PREFIX +
+                    instance.secret)
                 plain_text = field_cryptor.decrypt(stored_secret)
                 plain_text_encrypt_decrypt = field_cryptor.decrypt(field_cryptor.encrypt(plain_text))
                 if plain_text != plain_text_encrypt_decrypt:

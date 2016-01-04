@@ -2,7 +2,6 @@ from django.db import models
 
 from edc_base.model.models import BaseUuidModel
 from edc_sync.models import SyncModelMixin
-from edc_crypto_fields.managers.crypto_manager import CryptoManager
 
 # try:
 #     from edc.device.dispatch.models import BaseDispatchSyncUuidModel
@@ -16,6 +15,12 @@ from edc_crypto_fields.managers.crypto_manager import CryptoManager
 #     class BaseCrypt(models.Model):
 #         class Meta:
 #             abstract = True
+
+
+class CryptoManager(models.Manager):
+
+    def get_by_natural_key(self, hash_value, algorithm, mode):
+        return self.get(hash=hash_value, algorithm=algorithm, mode=mode)
 
 
 class Crypt(SyncModelMixin, BaseUuidModel):
@@ -46,9 +51,6 @@ class Crypt(SyncModelMixin, BaseUuidModel):
         null=True)
 
     objects = CryptoManager()
-
-    def deserialize_on_duplicate(self):
-        return False
 
     def natural_key(self):
         return (self.hash, self.algorithm, self.mode,)
