@@ -30,7 +30,11 @@ class FieldCryptor(object):
     @property
     def using(self):
         device = Device()
-        return 'server' if device.is_server else settings.EDC_CRYPTO_FIELDS_USING
+        try:
+            using_client = settings.EDC_CRYPTO_FIELDS_CLIENT_USING
+        except AttributeError:
+            using_client = 'default'
+        return 'default' if device.is_server else using_client
 
     def encrypt(self, value, **kwargs):
         """ Returns the encrypted field value (hash+secret) where
