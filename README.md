@@ -24,3 +24,8 @@ After settings has been updates, keys can be generated using a management comman
     python manage.py generate_keys
     
 The keys will be generated and placed in the folder specified in `KEY_PATH`. This is where the project will look for keys whenever it needs to encrypt a field.
+
+
+If using synchronization (`edc_sync.SyncModelMixin`), you can specifiy the default `using` attribute for the `Crypt` model. In most cases a client's database key will be 'default' and the server be 'server'. This is OK as the client does not attempt deserialization. See tests in `edc_sync`.
+
+    EDC_CRYPTO_FIELDS_CLIENT_USING = 'client'  # defaults to 'default' if not specified
