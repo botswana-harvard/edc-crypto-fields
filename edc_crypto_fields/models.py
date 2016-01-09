@@ -57,6 +57,5 @@ class Crypt(SyncModelMixin, BaseUuidModel):
 
     class Meta:
         app_label = 'edc_crypto_fields'
-        db_table = 'crypto_crypt'
         verbose_name = 'Crypt'
         unique_together = (('hash', 'algorithm', 'mode'),)
